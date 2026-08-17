@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KretStop — Kalkulator dojazdu</title>
+<meta name="description" content="Szybkie wyliczenie kosztu dojazdu do klienta — dystans, kilometry płatne, cena.">
+<meta name="theme-color" content="#35512f">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preload" as="font" type="font/woff2" href="fonts/PlayfairDisplay-700.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/SourceSans3-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/SourceSans3-600.woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --green:#35512f;
+  --deep:#263b22;
+  --leaf:#55723c;
+  --cream:#f9efe7;
+  --paper:#fdfaf2;
+  --ink:#2b2b26;
+  --muted:#6b6b60;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Source Sans 3',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 16px 48px;
+}
+header{
+  width:100%;
+  max-width:520px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:20px 0 16px;
+}
+header img.logo{width:52px;height:52px;object-fit:contain}
+header .titles h1{
+  font-family:'Playfair Display',serif;
+  font-weight:700;
+  font-size:1.45rem;
+  color:var(--deep);
+  line-height:1.15;
+}
+header .titles p{font-size:.85rem;color:var(--muted)}
+.card{
+  width:100%;
+  max-width:520px;
+  background:var(--paper);
+  border:1px solid #e8dcc9;
+  border-radius:18px;
+  box-shadow:0 8px 28px rgba(38,59,34,.08);
+  padding:22px 20px 24px;
+}
+label{
+  display:block;
+  font-weight:600;
+  font-size:.92rem;
+  color:var(--deep);
+  margin:16px 0 6px;
+}
+label:first-child{margin-top:0}
+label small{font-weight:400;color:var(--muted)}
+input{
+  width:100%;
+  font:inherit;
+  font-size:1rem;
+  padding:12px 14px;
+  border:1.5px solid #d8cbb4;
+  border-radius:12px;
+  background:#fff;
+  color:var(--ink);
+}
+input:focus{outline:2px solid var(--leaf);outline-offset:1px;border-color:var(--leaf)}
+.row{display:flex;gap:12px}
+.row .field{flex:1;min-width:0}
+.modes{
+  display:flex;
+  gap:8px;
+  margin-top:18px;
+  background:var(--cream);
+  border-radius:12px;
+  padding:4px;
+}
+.modes button{
+  flex:1;
+  font:inherit;
+  font-weight:600;
+  font-size:.9rem;
+  padding:9px 6px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+}
+.modes button[aria-pressed="true"]{
+  background:var(--paper);
+  color:var(--deep);
+  box-shadow:0 2px 8px rgba(38,59,34,.12);
+}
+#manualBox{display:none}
+body.manual #manualBox{display:block}
+body.manual #destWrap{display:none}
+.cta{
+  width:100%;
+  margin-top:20px;
+  font:inherit;
+  font-family:'Playfair Display',serif;
+  font-weight:700;
+  font-size:1.15rem;
+  letter-spacing:.02em;
+  color:var(--cream);
+  background:var(--green);
+  border:0;
+  border-radius:14px;
+  padding:15px;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.cta:hover{background:var(--deep)}
+.cta:active{transform:translateY(1px)}
+.cta:disabled{opacity:.6;cursor:wait;transform:none}
+#result{
+  display:none;
+  width:100%;
+  max-width:520px;
+  margin-top:18px;
+  background:var(--green);
+  color:var(--cream);
+  border-radius:18px;
+  padding:22px 20px;
+  box-shadow:0 8px 28px rgba(38,59,34,.18);
+}
+#result.show{display:block}
+#result .cost{
+  font-family:'Playfair Display',serif;
+  font-weight:700;
+  font-size:2.6rem;
+  line-height:1.1;
+  text-align:center;
+  margin:4px 0 14px;
+}
+#result .cost small{font-size:1.2rem}
+#result dl{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px 12px;
+  font-size:.98rem;
+  border-top:1px solid rgba(249,239,231,.25);
+  padding-top:14px;
+}
+#result dt{opacity:.85}
+#result dd{font-weight:600;text-align:right}
+#result .free{color:#cfe3b8}
+.mapslink{
+  display:block;
+  text-align:center;
+  margin-top:16px;
+  font-weight:600;
+  font-size:.95rem;
+  color:var(--cream);
+  text-decoration:none;
+  padding:11px;
+  border:1.5px solid rgba(249,239,231,.5);
+  border-radius:12px;
+}
+.mapslink:hover{background:rgba(249,239,231,.12)}
+#err{
+  display:none;
+  width:100%;
+  max-width:520px;
+  margin-top:18px;
+  background:#fdf0ec;
+  border:1.5px solid #d99a8a;
+  color:#8a3c28;
+  border-radius:14px;
+  padding:14px 16px;
+  font-size:.95rem;
+}
+#err.show{display:block}
+footer{
+  margin-top:28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:.82rem;
+  text-align:center;
+}
+footer img{width:88px;height:auto;opacity:.9}
+@media (max-width:400px){
+  .row{flex-direction:column;gap:0}
+  #result .cost{font-size:2.2rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="logo.webp" alt="Logo KretStop">
+  <div class="titles">
+    <h1>Kalkulator dojazdu</h1>
+    <p>KretStop — Skin Laser Sp. z o.o.</p>
+  </div>
+</header>
+
+<main class="card">
+  <label for="start">Punkt startowy</label>
+  <input id="start" type="text" autocomplete="street-address" spellcheck="false">
+
+  <div id="destWrap">
+    <label for="dest">Adres klienta <small>— miejscowość, ulica, numer</small></label>
+    <input id="dest" type="text" placeholder="np. Bydgoszcz, Gdańska 12" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="rate">Stawka za km <small>(zł)</small></label>
+      <input id="rate" type="text" inputmode="decimal" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="free">Gratis do <small>(km)</small></label>
+      <input id="free" type="text" inputmode="decimal" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="modes" role="group" aria-label="Sposób ustalania dystansu">
+    <button type="button" id="modeAuto" aria-pressed="true">Automatycznie (Google)</button>
+    <button type="button" id="modeManual" aria-pressed="false">Wpiszę km ręcznie</button>
+  </div>
+
+  <div id="manualBox">
+    <label for="manualKm">Dystans w jedną stronę <small>(km)</small></label>
+    <input id="manualKm" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 23,5">
+  </div>
+
+  <button class="cta" id="calc">Oblicz</button>
+</main>
+
+<section id="result" aria-live="polite">
+  <div class="cost"><span id="rCost">0,00</span> <small>zł</small></div>
+  <dl>
+    <dt>Dystans całkowity (w jedną stronę)</dt><dd id="rDist">—</dd>
+    <dt>Kilometry płatne (powyżej <span id="rFreeLbl">15</span> km)</dt><dd id="rBillable">—</dd>
+    <dt>Stawka</dt><dd id="rRate">—</dd>
+  </dl>
+  <a class="mapslink" id="mapsLink" href="#" target="_blank" rel="noopener">Sprawdź trasę w Mapach Google ↗</a>
+</section>
+
+<div id="err" role="alert"></div>
+
+<footer>
+  <img src="maskotka.webp" alt="Maskotka KretStop — kret">
+  <p>Dojazd do 15 km gratis · powyżej 1,50 zł/km w jedną stronę</p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== KONFIGURACJA ===== */
+var API_KEY = 'AIzaSyBpMb904oRXjLQ41g5XqcaSHXKMoraVZ0s';
+var DEFAULTS = {
+  start: 'ul. Botaniczna 5, 86-031 Osielsko',
+  rate: 1.50,
+  freeKm: 15
+};
+/* ========================= */
+
+var $ = function(id){ return document.getElementById(id); };
+var els = {
+  start: $('start'), dest: $('dest'), rate: $('rate'), free: $('free'),
+  manualKm: $('manualKm'), calc: $('calc'),
+  modeAuto: $('modeAuto'), modeManual: $('modeManual'),
+  result: $('result'), rCost: $('rCost'), rDist: $('rDist'),
+  rBillable: $('rBillable'), rRate: $('rRate'), rFreeLbl: $('rFreeLbl'),
+  mapsLink: $('mapsLink'), err: $('err')
+};
+
+function fmtPL(n, dec){
+  return n.toFixed(dec === undefined ? 2 : dec).replace('.', ',');
+}
+function parseNum(v){
+  if (typeof v === 'string') v = v.replace(',', '.').trim();
+  var n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+/* --- wczytaj zapisane ustawienia --- */
+try {
+  var saved = JSON.parse(localStorage.getItem('kretstop-dojazd') || '{}');
+  els.start.value = saved.start || DEFAULTS.start;
+  els.rate.value  = String(saved.rate != null ? saved.rate : DEFAULTS.rate);
+  els.free.value  = String(saved.freeKm != null ? saved.freeKm : DEFAULTS.freeKm);
+} catch(e) {
+  els.start.value = DEFAULTS.start;
+  els.rate.value  = String(DEFAULTS.rate);
+  els.free.value  = String(DEFAULTS.freeKm);
+}
+
+function saveSettings(){
+  try {
+    localStorage.setItem('kretstop-dojazd', JSON.stringify({
+      start: els.start.value.trim(),
+      rate: parseNum(els.rate.value),
+      freeKm: parseNum(els.free.value)
+    }));
+  } catch(e){}
+}
+
+/* --- tryb auto / ręczny --- */
+function setMode(manual){
+  document.body.classList.toggle('manual', manual);
+  els.modeAuto.setAttribute('aria-pressed', String(!manual));
+  els.modeManual.setAttribute('aria-pressed', String(manual));
+  hideErr();
+}
+els.modeAuto.addEventListener('click', function(){ setMode(false); });
+els.modeManual.addEventListener('click', function(){ setMode(true); });
+
+function showErr(msg){
+  els.err.textContent = msg;
+  els.err.classList.add('show');
+}
+function hideErr(){
+  els.err.classList.remove('show');
+}
+
+/* --- link do Map Google (fallback) --- */
+function updateMapsLink(){
+  var s = els.start.value.trim(), d = els.dest.value.trim();
+  if (s && d) {
+    els.mapsLink.href = 'https://www.google.com/maps/dir/' +
+      encodeURIComponent(s) + '/' + encodeURIComponent(d);
+  } else {
+    els.mapsLink.href = 'https://www.google.com/maps';
+  }
+}
+els.start.addEventListener('input', updateMapsLink);
+els.dest.addEventListener('input', updateMapsLink);
+
+/* --- Routes API: dystans drogowy --- */
+function fetchDistanceKm(origin, destination){
+  return fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': API_KEY,
+      'X-Goog-FieldMask': 'routes.distanceMeters'
+    },
+    body: JSON.stringify({
+      origin: { address: origin },
+      destination: { address: destination },
+      travelMode: 'DRIVE',
+      units: 'METRIC'
+    })
+  }).then(function(res){
+    if (!res.ok) {
+      return res.json().catch(function(){ return {}; }).then(function(body){
+        var msg = (body && body.error && body.error.message) || ('HTTP ' + res.status);
+        throw new Error(msg);
+      });
+    }
+    return res.json();
+  }).then(function(data){
+    if (!data.routes || !data.routes.length || data.routes[0].distanceMeters == null) {
+      throw new Error('no-route');
+    }
+    return data.routes[0].distanceMeters / 1000;
+  });
+}
+
+/* --- wynik --- */
+function showResult(totalKm, rate, freeKm){
+  totalKm = Math.round(totalKm * 10) / 10;
+  var billable = Math.max(0, Math.round((totalKm - freeKm) * 10) / 10);
+  var cost = billable * rate;
+  els.rCost.textContent = fmtPL(cost);
+  els.rDist.textContent = fmtPL(totalKm, 1) + ' km';
+  els.rBillable.textContent = billable > 0 ? fmtPL(billable, 1) + ' km' : '0 km — dojazd gratis';
+  els.rRate.textContent = fmtPL(rate) + ' zł/km';
+  els.rFreeLbl.textContent = String(freeKm);
+  updateMapsLink();
+  els.result.classList.add('show');
+  els.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+els.calc.addEventListener('click', function(){
+  hideErr();
+  var start = els.start.value.trim();
+  var rate = parseNum(els.rate.value);
+  var freeKm = parseNum(els.free.value);
+
+  if (!start) { showErr('Podaj punkt startowy.'); return; }
+  if (rate == null || rate < 0) { showErr('Podaj poprawną stawkę za km.'); return; }
+  if (freeKm == null || freeKm < 0) { showErr('Podaj poprawny limit darmowych kilometrów.'); return; }
+  saveSettings();
+
+  var manual = document.body.classList.contains('manual');
+
+  if (manual) {
+    var km = parseNum(els.manualKm.value);
+    if (km == null || km < 0) { showErr('Wpisz dystans w kilometrach (albo przełącz na tryb automatyczny).'); return; }
+    showResult(km, rate, freeKm);
+    return;
+  }
+
+  var dest = els.dest.value.trim();
+  if (!dest) { showErr('Podaj adres klienta.'); return; }
+
+  els.calc.disabled = true;
+  els.calc.textContent = 'Liczenie…';
+  fetchDistanceKm(start, dest).then(function(km){
+    showResult(km, rate, freeKm);
+  }).catch(function(e){
+    var msg = 'Nie udało się policzyć trasy automatycznie. ';
+    if (e && e.message === 'no-route') {
+      msg += 'Nie znaleziono drogi między tymi adresami.';
+    } else if (e && e.message === 'Failed to fetch') {
+      msg += 'Brak połączenia z internetem.';
+    } else {
+      msg += 'Sprawdź adresy i spróbuj ponownie.';
+    }
+    msg += ' Możesz kliknąć „Wpiszę km ręcznie" i przepisać dystans z Map Google (link pod wynikiem).';
+    showErr(msg);
+  }).finally(function(){
+    els.calc.disabled = false;
+    els.calc.textContent = 'Oblicz';
+  });
+});
+
+/* --- PWA: service worker --- */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+
+updateMapsLink();
+})();
+</script>
+</body>
+</html>
