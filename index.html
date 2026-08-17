@@ -192,6 +192,7 @@ body.manual #destWrap{display:none}
   font-size:.95rem;
 }
 #err.show{display:block}
+#err a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:.2em}
 footer{
   margin-top:28px;
   display:flex;
@@ -336,7 +337,7 @@ els.modeAuto.addEventListener('click', function(){ setMode(false); });
 els.modeManual.addEventListener('click', function(){ setMode(true); });
 
 function showErr(msg){
-  els.err.textContent = msg;
+  els.err.innerHTML = msg;
   els.err.classList.add('show');
 }
 function hideErr(){
@@ -438,7 +439,8 @@ els.calc.addEventListener('click', function(){
     } else {
       msg += 'Sprawdź adresy i spróbuj ponownie.';
     }
-    msg += ' Możesz kliknąć „Wpiszę km ręcznie" i przepisać dystans z Map Google (link pod wynikiem).';
+    msg += ' Możesz kliknąć „Wpiszę km ręcznie" i przepisać dystans z Map Google (link pod wynikiem) ' +
+      '— albo <a href="https://wa.me/48513120111" rel="noopener">napisz na WhatsApp</a> lub <a href="tel:+48513120111">zadzwoń: 513 120 111</a>.';
     showErr(msg);
   }).finally(function(){
     els.calc.disabled = false;
