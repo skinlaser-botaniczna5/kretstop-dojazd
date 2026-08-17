@@ -1,11 +1,11 @@
 /* KretStop Kalkulator dojazdu — service worker */
-var CACHE = 'kretstop-dojazd-v7';
+var CACHE = 'kretstop-dojazd-v8';
 var ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './logo.webp',
-  './maskotka.webp',
+  './maskotka-small.webp',
   './favicon-16.png',
   './favicon-32.png',
   './favicon-48.png',

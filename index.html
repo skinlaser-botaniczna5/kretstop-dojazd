@@ -412,8 +412,8 @@ footer img{width:88px;height:auto;opacity:.9}
 </div>
 
 <footer>
-  <img src="maskotka.webp" alt="Maskotka KretStop — kret">
-  <p>Dojazd do 15 km gratis · powyżej 2,00 zł/km w jedną stronę · stawka wg aktualnych cen paliw</p>
+  <img src="maskotka-small.webp" alt="Maskotka KretStop — kret" width="88" height="66">
+  <p>Dojazd do 15 km gratis · powyżej 2,50 zł/km w jedną stronę · stawka wg aktualnych cen paliw</p>
 </footer>
 
 <script>
@@ -424,7 +424,7 @@ footer img{width:88px;height:auto;opacity:.9}
 var API_KEY = 'AIzaSyBpMb904oRXjLQ41g5XqcaSHXKMoraVZ0s';
 var DEFAULTS = {
   start: 'ul. Botaniczna 5, 86-031 Osielsko',
-  rate: 2.00,
+  rate: 2.50,
   freeKm: 15
 };
 /* ========================= */
@@ -451,29 +451,11 @@ function parseNum(v){
   return isFinite(n) ? n : null;
 }
 
-/* --- wczytaj zapisane ustawienia --- */
-try {
-  var saved = JSON.parse(localStorage.getItem('kretstop-dojazd') || '{}');
-  /* migracja: stara domyślna stawka 1,50 → nowa 2,00 */
-  if (saved.rate === 1.5) saved.rate = DEFAULTS.rate;
-  els.start.value = saved.start || DEFAULTS.start;
-  els.rate.value  = String(saved.rate != null ? saved.rate : DEFAULTS.rate);
-  els.free.value  = String(saved.freeKm != null ? saved.freeKm : DEFAULTS.freeKm);
-} catch(e) {
-  els.start.value = DEFAULTS.start;
-  els.rate.value  = String(DEFAULTS.rate);
-  els.free.value  = String(DEFAULTS.freeKm);
-}
-
-function saveSettings(){
-  try {
-    localStorage.setItem('kretstop-dojazd', JSON.stringify({
-      start: els.start.value.trim(),
-      rate: parseNum(els.rate.value),
-      freeKm: parseNum(els.free.value)
-    }));
-  } catch(e){}
-}
+/* --- zawsze wartości domyślne; stary zapis w localStorage usuwamy --- */
+try { localStorage.removeItem('kretstop-dojazd'); } catch(e){}
+els.start.value = DEFAULTS.start;
+els.rate.value  = String(DEFAULTS.rate);
+els.free.value  = String(DEFAULTS.freeKm);
 
 /* --- tryb auto / ręczny --- */
 function setMode(manual){
@@ -745,7 +727,6 @@ els.calc.addEventListener('click', function(){
   if (rate > 50) { showErr('Stawka za km wygląda na zawyżoną (maks. 50 zł) — sprawdź, czy się nie pomyliłaś.'); return; }
   if (freeKm == null) { showErr('Limit darmowych kilometrów: wpisz same cyfry, np. „15".'); return; }
   if (freeKm > 100) { showErr('Limit darmowych kilometrów wygląda na zawyżony (maks. 100 km) — sprawdź, czy się nie pomyliłaś.'); return; }
-  saveSettings();
 
   var manual = document.body.classList.contains('manual');
 
