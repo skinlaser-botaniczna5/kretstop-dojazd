@@ -1,5 +1,5 @@
 /* KretStop Kalkulator dojazdu — service worker */
-var CACHE = 'kretstop-dojazd-v9';
+var CACHE = 'kretstop-dojazd-v10';
 var ASSETS = [
   './',
   './index.html',
