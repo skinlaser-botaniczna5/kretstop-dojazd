@@ -291,6 +291,16 @@ body.manual #depWrap{display:none}
   border-radius:12px;
 }
 .mapslink:hover{background:rgba(249,239,231,.12)}
+.rangewarn{
+  margin:14px 0 0;
+  padding:10px 12px;
+  border:1.5px dashed #e0a44a;
+  border-radius:12px;
+  color:#f4d9a8;
+  font-size:.92rem;
+  font-weight:600;
+  text-align:center;
+}
 #err{
   display:none;
   width:100%;
@@ -381,6 +391,7 @@ footer img{width:88px;height:auto;opacity:.9}
     <dt>Kilometry płatne (powyżej <span id="rFreeLbl">15</span> km)</dt><dd id="rBillable">—</dd>
     <dt>Stawka</dt><dd id="rRate">—</dd>
   </dl>
+  <p class="rangewarn" id="rangeWarn" hidden>Poza standardowym zasięgiem 40 km — potwierdź z klientem, że taki dojazd wchodzi w grę.</p>
   <a class="mapslink" id="mapsLink" href="#" target="_blank" rel="noopener">Sprawdź trasę w Mapach Google ↗</a>
 </section>
 
@@ -413,7 +424,7 @@ footer img{width:88px;height:auto;opacity:.9}
 
 <footer>
   <img src="maskotka-small.webp" alt="Maskotka KretStop — kret" width="88" height="66">
-  <p>Dojazd do 15 km gratis · powyżej 2,50 zł/km w jedną stronę · stawka wg aktualnych cen paliw</p>
+  <p>Dojazd do 15 km gratis · powyżej 2,50 zł/km w jedną stronę · zasięg do 40 km · stawka wg aktualnych cen paliw</p>
 </footer>
 
 <script>
@@ -427,6 +438,7 @@ var DEFAULTS = {
   rate: 2.50,
   freeKm: 15
 };
+var MAX_KM = 40; /* standardowy zasięg dojazdu */
 /* ========================= */
 
 var $ = function(id){ return document.getElementById(id); };
@@ -711,6 +723,7 @@ function showResult(totalKm, rate, freeKm, timeText){
     els.rTime.textContent = timeText;
     timeRow.classList.remove('hide');
   }
+  $('rangeWarn').hidden = totalKm <= MAX_KM;
   updateMapsLink();
   els.result.classList.add('show');
   els.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
