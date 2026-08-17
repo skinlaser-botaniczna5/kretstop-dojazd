@@ -266,7 +266,7 @@ footer img{width:88px;height:auto;opacity:.9}
 
 <footer>
   <img src="maskotka.webp" alt="Maskotka KretStop — kret">
-  <p>Dojazd do 15 km gratis · powyżej 1,50 zł/km w jedną stronę</p>
+  <p>Dojazd do 15 km gratis · powyżej 2,00 zł/km w jedną stronę · stawka wg aktualnych cen paliw</p>
 </footer>
 
 <script>
@@ -277,7 +277,7 @@ footer img{width:88px;height:auto;opacity:.9}
 var API_KEY = 'AIzaSyBpMb904oRXjLQ41g5XqcaSHXKMoraVZ0s';
 var DEFAULTS = {
   start: 'ul. Botaniczna 5, 86-031 Osielsko',
-  rate: 1.50,
+  rate: 2.00,
   freeKm: 15
 };
 /* ========================= */
@@ -304,6 +304,8 @@ function parseNum(v){
 /* --- wczytaj zapisane ustawienia --- */
 try {
   var saved = JSON.parse(localStorage.getItem('kretstop-dojazd') || '{}');
+  /* migracja: stara domyślna stawka 1,50 → nowa 2,00 */
+  if (saved.rate === 1.5) saved.rate = DEFAULTS.rate;
   els.start.value = saved.start || DEFAULTS.start;
   els.rate.value  = String(saved.rate != null ? saved.rate : DEFAULTS.rate);
   els.free.value  = String(saved.freeKm != null ? saved.freeKm : DEFAULTS.freeKm);
