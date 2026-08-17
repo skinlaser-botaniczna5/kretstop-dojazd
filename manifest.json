@@ -1,6 +1,6 @@
 {
-  "name": "KretStop — Kalkulator dojazdu",
-  "short_name": "Dojazd KretStop",
+  "name": "KretStop",
+  "short_name": "KretStop",
   "description": "Szybkie wyliczenie kosztu dojazdu do klienta.",
   "lang": "pl",
   "start_url": "./",
