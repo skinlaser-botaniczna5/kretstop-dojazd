@@ -1,5 +1,5 @@
 /* KretStop Kalkulator dojazdu — service worker */
-var CACHE = 'kretstop-dojazd-v1';
+var CACHE = 'kretstop-dojazd-v2';
 var ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ var ASSETS = [
   './apple-touch-icon.png',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
   './fonts/fonts.css',
   './fonts/PlayfairDisplay-500.woff2',
   './fonts/PlayfairDisplay-500i.woff2',
