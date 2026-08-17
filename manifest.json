@@ -3,6 +3,7 @@
   "short_name": "KretStop",
   "description": "Szybkie wyliczenie kosztu dojazdu do klienta.",
   "lang": "pl",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

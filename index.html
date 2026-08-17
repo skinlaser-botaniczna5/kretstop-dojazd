@@ -115,6 +115,116 @@ input:focus{outline:2px solid var(--leaf);outline-offset:1px;border-color:var(--
 #manualBox{display:none}
 body.manual #manualBox{display:block}
 body.manual #destWrap{display:none}
+body.manual #depWrap{display:none}
+/* --- pole godziny wyjazdu (wygląda jak input, otwiera modal) --- */
+.fieldbtn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  font:inherit;
+  font-size:1rem;
+  padding:12px 14px;
+  border:1.5px solid #d8cbb4;
+  border-radius:12px;
+  background:#fff;
+  color:var(--muted);
+  cursor:pointer;
+  text-align:left;
+}
+.fieldbtn.set{color:var(--ink);font-weight:600}
+.fieldbtn:focus{outline:2px solid var(--leaf);outline-offset:1px;border-color:var(--leaf)}
+.fieldbtn svg{flex:none}
+/* --- modal godziny wyjazdu: bottom-sheet na telefonie, dialog na desktopie --- */
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  background:rgba(38,59,34,.5);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.modal[hidden]{display:none}
+.sheet{
+  background:var(--paper);
+  width:100%;
+  max-width:480px;
+  border-radius:20px 20px 0 0;
+  padding:20px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 40px rgba(38,59,34,.25);
+}
+@media (min-width:560px){
+  .modal{align-items:center;padding:20px}
+  .sheet{border-radius:20px;max-width:420px}
+}
+.sheet h2{
+  font-family:'Playfair Display',serif;
+  font-weight:700;
+  font-size:1.25rem;
+  color:var(--deep);
+  margin-bottom:14px;
+}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips button{
+  font:inherit;
+  font-weight:600;
+  font-size:.95rem;
+  padding:11px 6px;
+  border:1.5px solid #d8cbb4;
+  border-radius:11px;
+  background:#fff;
+  color:var(--deep);
+  cursor:pointer;
+}
+.chips button.on{background:var(--green);border-color:var(--green);color:var(--cream)}
+.daterow{margin-top:12px}
+.daterow label{margin-top:0;font-size:.85rem}
+.tcols{display:flex;gap:10px;align-items:stretch;margin-top:12px}
+.tcol{
+  position:relative;
+  flex:1;
+  max-height:168px;
+  overflow-y:auto;
+  border:1.5px solid #d8cbb4;
+  border-radius:12px;
+  background:#fff;
+  padding:6px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  scroll-snap-type:y proximity;
+  -webkit-overflow-scrolling:touch;
+}
+.tcol button{
+  flex:none;
+  font:inherit;
+  font-size:1.05rem;
+  font-weight:600;
+  padding:10px 0;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:var(--ink);
+  cursor:pointer;
+  scroll-snap-align:center;
+}
+.tcol button[aria-selected="true"]{background:var(--green);color:var(--cream)}
+.tsep{align-self:center;font-weight:700;font-size:1.3rem;color:var(--muted)}
+.sheet-foot{display:flex;gap:10px;margin-top:18px}
+.sheet-foot button{
+  flex:1;
+  font:inherit;
+  font-weight:700;
+  font-size:1rem;
+  padding:13px;
+  border-radius:12px;
+  cursor:pointer;
+  border:1.5px solid #d8cbb4;
+  background:#fff;
+  color:var(--deep);
+}
+.sheet-foot .primary{background:var(--green);border-color:var(--green);color:var(--cream)}
 .cta{
   width:100%;
   margin-top:20px;
@@ -163,6 +273,8 @@ body.manual #destWrap{display:none}
   border-top:1px solid rgba(249,239,231,.25);
   padding-top:14px;
 }
+#result .trow{display:contents}
+#result #timeRow.hide{display:none}
 #result dt{opacity:.85}
 #result dd{font-weight:600;text-align:right}
 #result .free{color:#cfe3b8}
@@ -229,6 +341,14 @@ footer img{width:88px;height:auto;opacity:.9}
     <input id="dest" type="text" placeholder="np. Bydgoszcz, Gdańska 12" autocomplete="off" spellcheck="false">
   </div>
 
+  <div id="depWrap">
+    <label id="depLabel">Godzina wyjazdu <small>— opcjonalnie, liczy z ruchem</small></label>
+    <button type="button" id="depField" class="fieldbtn" aria-haspopup="dialog" aria-labelledby="depLabel depVal">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="depVal">Czas ogólny (bez ruchu)</span>
+    </button>
+  </div>
+
   <div class="row">
     <div class="field">
       <label for="rate">Stawka za km <small>(zł)</small></label>
@@ -257,6 +377,7 @@ footer img{width:88px;height:auto;opacity:.9}
   <div class="cost"><span id="rCost">0,00</span> <small>zł</small></div>
   <dl>
     <dt>Dystans całkowity (w jedną stronę)</dt><dd id="rDist">—</dd>
+    <div class="trow hide" id="timeRow"><dt>Czas dojazdu (wg Google)</dt><dd id="rTime">—</dd></div>
     <dt>Kilometry płatne (powyżej <span id="rFreeLbl">15</span> km)</dt><dd id="rBillable">—</dd>
     <dt>Stawka</dt><dd id="rRate">—</dd>
   </dl>
@@ -264,6 +385,31 @@ footer img{width:88px;height:auto;opacity:.9}
 </section>
 
 <div id="err" role="alert"></div>
+
+<div class="modal" id="depModal" role="dialog" aria-modal="true" aria-labelledby="depTitle" hidden>
+  <div class="sheet">
+    <h2 id="depTitle">Godzina wyjazdu</h2>
+    <div class="chips">
+      <button type="button" data-chip="now">Teraz</button>
+      <button type="button" data-chip="hour">Za godzinę</button>
+      <button type="button" data-chip="tomorrow">Jutro</button>
+      <button type="button" data-chip="dayafter">Pojutrze</button>
+    </div>
+    <div class="daterow">
+      <label for="depDate">Inny dzień <small>(maks. 30 dni do przodu)</small></label>
+      <input type="date" id="depDate">
+    </div>
+    <div class="tcols">
+      <div class="tcol" id="depHours" role="listbox" aria-label="Godzina"></div>
+      <div class="tsep" aria-hidden="true">:</div>
+      <div class="tcol" id="depMins" role="listbox" aria-label="Minuty"></div>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" id="depClear">Wyczyść</button>
+      <button type="button" id="depOk" class="primary">Zatwierdź</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   <img src="maskotka.webp" alt="Maskotka KretStop — kret">
@@ -290,16 +436,19 @@ var els = {
   modeAuto: $('modeAuto'), modeManual: $('modeManual'),
   result: $('result'), rCost: $('rCost'), rDist: $('rDist'),
   rBillable: $('rBillable'), rRate: $('rRate'), rFreeLbl: $('rFreeLbl'),
-  mapsLink: $('mapsLink'), err: $('err')
+  rTime: $('rTime'), mapsLink: $('mapsLink'), err: $('err')
 };
 
 function fmtPL(n, dec){
   return n.toFixed(dec === undefined ? 2 : dec).replace('.', ',');
 }
 function parseNum(v){
-  if (typeof v === 'string') v = v.replace(',', '.').trim();
-  var n = parseFloat(v);
-  return isNaN(n) ? null : n;
+  /* ściśle: same cyfry + jeden separator (przecinek lub kropka); odrzuca "12abc", "1.2.3", "1e5" */
+  if (typeof v !== 'string') v = String(v);
+  v = v.trim().replace(',', '.');
+  if (!/^\d+(\.\d+)?$/.test(v)) return null;
+  var n = Number(v);
+  return isFinite(n) ? n : null;
 }
 
 /* --- wczytaj zapisane ustawienia --- */
@@ -357,39 +506,214 @@ function updateMapsLink(){
 els.start.addEventListener('input', updateMapsLink);
 els.dest.addEventListener('input', updateMapsLink);
 
-/* --- Routes API: dystans drogowy --- */
-function fetchDistanceKm(origin, destination){
+/* --- Routes API: dystans + czas dojazdu --- */
+function fetchRoute(origin, destination, departureMs){
+  var body = {
+    origin: { address: origin },
+    destination: { address: destination },
+    travelMode: 'DRIVE',
+    units: 'METRIC'
+  };
+  if (departureMs != null) {
+    body.departureTime = new Date(departureMs).toISOString();
+    body.routingPreference = 'TRAFFIC_AWARE';
+  }
   return fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': API_KEY,
-      'X-Goog-FieldMask': 'routes.distanceMeters'
+      'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration'
     },
-    body: JSON.stringify({
-      origin: { address: origin },
-      destination: { address: destination },
-      travelMode: 'DRIVE',
-      units: 'METRIC'
-    })
+    body: JSON.stringify(body)
   }).then(function(res){
     if (!res.ok) {
-      return res.json().catch(function(){ return {}; }).then(function(body){
-        var msg = (body && body.error && body.error.message) || ('HTTP ' + res.status);
+      return res.json().catch(function(){ return {}; }).then(function(errBody){
+        var msg = (errBody && errBody.error && errBody.error.message) || ('HTTP ' + res.status);
         throw new Error(msg);
       });
     }
     return res.json();
   }).then(function(data){
-    if (!data.routes || !data.routes.length || data.routes[0].distanceMeters == null) {
+    var r = data.routes && data.routes[0];
+    if (!r || r.distanceMeters == null) {
       throw new Error('no-route');
     }
-    return data.routes[0].distanceMeters / 1000;
+    var sec = null;
+    if (typeof r.duration === 'string') {
+      var m = /^(\d+(?:\.\d+)?)s$/.exec(r.duration);
+      if (m) sec = parseFloat(m[1]);
+    }
+    return { km: r.distanceMeters / 1000, sec: sec };
   });
 }
 
+/* --- godzina wyjazdu: stan + modal --- */
+var departureMs = null; /* null = czas ogólny (bez ruchu) */
+var depModal = $('depModal'), depField = $('depField'), depVal = $('depVal');
+var depDate = $('depDate'), depHours = $('depHours'), depMins = $('depMins');
+var lastChip = null;
+
+function pad2(n){ return String(n).padStart(2, '0'); }
+function isoDay(d){ return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function dayWord(d){
+  var t0 = new Date(); t0 = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate());
+  var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var diff = Math.round((dd - t0) / 86400000);
+  if (diff === 0) return 'dziś';
+  if (diff === 1) return 'jutro';
+  if (diff === 2) return 'pojutrze';
+  return d.getDate() + '.' + pad2(d.getMonth() + 1);
+}
+function fmtTime(d){ return d.getHours() + ':' + pad2(d.getMinutes()); }
+function fmtDuration(sec){
+  var m = Math.round(sec / 60);
+  if (m < 60) return 'ok. ' + m + ' min';
+  var h = Math.floor(m / 60), mm = m % 60;
+  return 'ok. ' + h + ' godz.' + (mm ? ' ' + mm + ' min' : '');
+}
+
+function updateDepField(){
+  if (departureMs == null) {
+    depVal.textContent = 'Czas ogólny (bez ruchu)';
+    depField.classList.remove('set');
+  } else {
+    var d = new Date(departureMs);
+    depVal.textContent = dayWord(d) + ', ' + fmtTime(d);
+    depField.classList.add('set');
+  }
+}
+
+/* kolumny godzin / minut */
+function buildCol(col, values, aria){
+  values.forEach(function(v){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = pad2(v);
+    b.setAttribute('role', 'option');
+    b.setAttribute('aria-selected', 'false');
+    b.dataset.val = v;
+    b.addEventListener('click', function(){
+      selectInCol(col, v);
+      clearChips();
+    });
+    col.appendChild(b);
+  });
+}
+function selectInCol(col, v){
+  var btns = col.querySelectorAll('button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].setAttribute('aria-selected', String(Number(btns[i].dataset.val) === v));
+  }
+}
+function getColVal(col){
+  var b = col.querySelector('button[aria-selected="true"]');
+  return b ? Number(b.dataset.val) : null;
+}
+function scrollToSelected(col){
+  var b = col.querySelector('button[aria-selected="true"]');
+  if (b) col.scrollTop = b.offsetTop - col.clientHeight / 2 + b.clientHeight / 2;
+}
+var HOURS = [], MINS = [], i;
+for (i = 0; i < 24; i++) HOURS.push(i);
+for (i = 0; i < 60; i += 5) MINS.push(i);
+buildCol(depHours, HOURS);
+buildCol(depMins, MINS);
+
+function clearChips(){
+  lastChip = null;
+  var chips = depModal.querySelectorAll('.chips button');
+  for (var j = 0; j < chips.length; j++) chips[j].classList.remove('on');
+}
+function setChip(name){
+  clearChips();
+  lastChip = name;
+  depModal.querySelector('[data-chip="' + name + '"]').classList.add('on');
+}
+function ceil5(d){ /* zaokrąglij minuty w górę do siatki co 5 */
+  var r = new Date(d);
+  var m = Math.ceil(r.getMinutes() / 5) * 5;
+  if (m === 60) { r.setHours(r.getHours() + 1); m = 0; }
+  r.setMinutes(m, 0, 0);
+  return r;
+}
+
+depModal.querySelectorAll('.chips button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var name = btn.dataset.chip;
+    setChip(name);
+    var now = new Date(), d;
+    if (name === 'now') d = ceil5(new Date(now.getTime() + 2 * 60000));
+    else if (name === 'hour') d = ceil5(new Date(now.getTime() + 62 * 60000));
+    else {
+      d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (name === 'dayafter' ? 2 : 1),
+        getColVal(depHours) != null ? getColVal(depHours) : 8,
+        getColVal(depMins) != null ? getColVal(depMins) : 0);
+    }
+    selectInCol(depHours, d.getHours());
+    selectInCol(depMins, Math.round(d.getMinutes() / 5) * 5 % 60);
+    depDate.value = isoDay(d);
+    scrollToSelected(depHours);
+    scrollToSelected(depMins);
+  });
+});
+depDate.addEventListener('change', clearChips);
+
+function openDepModal(){
+  var now = new Date();
+  depDate.min = isoDay(now);
+  depDate.max = isoDay(new Date(now.getTime() + 30 * 86400000));
+  if (departureMs != null) {
+    var d = new Date(departureMs);
+    selectInCol(depHours, d.getHours());
+    selectInCol(depMins, Math.round(d.getMinutes() / 5) * 5 % 60);
+    depDate.value = isoDay(d);
+  } else {
+    selectInCol(depHours, 8);
+    selectInCol(depMins, 0);
+    depDate.value = '';
+  }
+  clearChips();
+  depModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  scrollToSelected(depHours);
+  scrollToSelected(depMins);
+  depModal.querySelector('.chips button').focus();
+}
+function closeDepModal(){
+  depModal.hidden = true;
+  document.body.style.overflow = '';
+  depField.focus();
+}
+depField.addEventListener('click', openDepModal);
+depModal.addEventListener('click', function(e){ if (e.target === depModal) closeDepModal(); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !depModal.hidden) closeDepModal();
+});
+$('depClear').addEventListener('click', function(){
+  departureMs = null;
+  updateDepField();
+  closeDepModal();
+});
+$('depOk').addEventListener('click', function(){
+  var now = Date.now();
+  if (lastChip === 'now') departureMs = now + 2 * 60000;
+  else if (lastChip === 'hour') departureMs = now + 62 * 60000;
+  else {
+    var dv = depDate.value || isoDay(new Date());
+    var parts = dv.split('-');
+    var h = getColVal(depHours), m = getColVal(depMins);
+    departureMs = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]),
+      h != null ? h : 8, m != null ? m : 0).getTime();
+  }
+  if (departureMs < now) departureMs += 86400000; /* termin minął → jutro o tej samej godzinie */
+  updateDepField();
+  closeDepModal();
+});
+updateDepField();
+
 /* --- wynik --- */
-function showResult(totalKm, rate, freeKm){
+function showResult(totalKm, rate, freeKm, timeText){
   totalKm = Math.round(totalKm * 10) / 10;
   var billable = Math.max(0, Math.round((totalKm - freeKm) * 10) / 10);
   var cost = billable * rate;
@@ -398,6 +722,13 @@ function showResult(totalKm, rate, freeKm){
   els.rBillable.textContent = billable > 0 ? fmtPL(billable, 1) + ' km' : '0 km — dojazd gratis';
   els.rRate.textContent = fmtPL(rate) + ' zł/km';
   els.rFreeLbl.textContent = String(freeKm);
+  var timeRow = $('timeRow');
+  if (timeText == null) {
+    timeRow.classList.add('hide');
+  } else {
+    els.rTime.textContent = timeText;
+    timeRow.classList.remove('hide');
+  }
   updateMapsLink();
   els.result.classList.add('show');
   els.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -410,15 +741,18 @@ els.calc.addEventListener('click', function(){
   var freeKm = parseNum(els.free.value);
 
   if (!start) { showErr('Podaj punkt startowy.'); return; }
-  if (rate == null || rate < 0) { showErr('Podaj poprawną stawkę za km.'); return; }
-  if (freeKm == null || freeKm < 0) { showErr('Podaj poprawny limit darmowych kilometrów.'); return; }
+  if (rate == null) { showErr('Stawka za km: wpisz same cyfry, np. „2" albo „2,50".'); return; }
+  if (rate > 50) { showErr('Stawka za km wygląda na zawyżoną (maks. 50 zł) — sprawdź, czy się nie pomyliłaś.'); return; }
+  if (freeKm == null) { showErr('Limit darmowych kilometrów: wpisz same cyfry, np. „15".'); return; }
+  if (freeKm > 100) { showErr('Limit darmowych kilometrów wygląda na zawyżony (maks. 100 km) — sprawdź, czy się nie pomyliłaś.'); return; }
   saveSettings();
 
   var manual = document.body.classList.contains('manual');
 
   if (manual) {
     var km = parseNum(els.manualKm.value);
-    if (km == null || km < 0) { showErr('Wpisz dystans w kilometrach (albo przełącz na tryb automatyczny).'); return; }
+    if (km == null) { showErr('Dystans: wpisz same cyfry, np. „23,5" (albo przełącz na tryb automatyczny).'); return; }
+    if (km > 1000) { showErr('Dystans wygląda na zawyżony (maks. 1000 km) — sprawdź, czy się nie pomyliłaś.'); return; }
     showResult(km, rate, freeKm);
     return;
   }
@@ -426,10 +760,27 @@ els.calc.addEventListener('click', function(){
   var dest = els.dest.value.trim();
   if (!dest) { showErr('Podaj adres klienta.'); return; }
 
+  /* godzina wyjazdu: jeśli minęła od ustawienia — przesuń na następny dzień */
+  if (departureMs != null && departureMs < Date.now()) {
+    departureMs += 86400000;
+    updateDepField();
+  }
+
   els.calc.disabled = true;
   els.calc.textContent = 'Liczenie…';
-  fetchDistanceKm(start, dest).then(function(km){
-    showResult(km, rate, freeKm);
+  var dep = departureMs;
+  fetchRoute(start, dest, dep).then(function(r){
+    var t = null;
+    if (r.sec != null) {
+      t = fmtDuration(r.sec);
+      if (dep != null) {
+        var d = new Date(dep);
+        t += ' (' + dayWord(d) + ', ' + fmtTime(d) + ' — z ruchem)';
+      } else {
+        t += ' (czas ogólny)';
+      }
+    }
+    showResult(r.km, rate, freeKm, t);
   }).catch(function(e){
     var msg = 'Nie udało się policzyć trasy automatycznie. ';
     if (e && e.message === 'no-route') {
